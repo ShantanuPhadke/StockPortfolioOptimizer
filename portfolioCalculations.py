@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import statistics
+import math
+
 
 initial_investment = 1000
 csv_extension = '.csv'
@@ -165,7 +167,13 @@ def get_standard_daily_return(daily_returns):
 #INPUT: A list of the daily returns.
 #OUTPUT: Computes the Sharpe ratio assuming a 0% daily risk free rate (since eoconomy is currently doing well)
 def get_sharpe_ratio(daily_returns):
-	return (get_average_daily_return(daily_returns))/(get_standard_daily_return(daily_returns))
+	return (get_average_daily_return(daily_returns))/(get_standard_daily_return(daily_returns))\
+
+#INPUT: (1) Number of samples (252 for daily, 52 for weekly, 12 for monthly), (2) sharpe ratio
+#OUTPUT: The annualized Sharpe ratio.
+def get_annualized_sharpe_ratio(number_samples, sharpe_ratio):
+	return math.sqrt(number_samples)*sharpe_ratio
+
 
 plot_price_data(portfolio_stock_names)
 print()
@@ -184,6 +192,7 @@ cumulative_return = get_cumulative_return(portfolio_values)
 average_daily_return = get_average_daily_return(daily_returns)
 standard_daily_return = get_standard_daily_return(daily_returns)
 sharpe_ratio = get_sharpe_ratio(daily_returns)
+annualized_sharpe_ratio = get_annualized_sharpe_ratio(252, sharpe_ratio)
 
 print("Normed Matrix: " + str(normed_matrix))
 print()
@@ -202,5 +211,8 @@ print()
 print("Standard Daily Return: " + str(standard_daily_return))
 print()
 print("Sharpe Ratio: " + str(sharpe_ratio))
+print()
+print("Annualized Sharpe Ratio: " + str(annualized_sharpe_ratio))
+print()
 
 display_portfolio_value_over_time(portfolio_values)
