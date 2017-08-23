@@ -90,8 +90,9 @@ def get_almost_equal_allocations(cash_amount, number_stocks, opening_day_costs):
 		percentage_allocations[index] = percentage_allocations[index]/total_cash_spent
 	return (percentage_allocations, total_cash_spent)
 
-#INPUT:
-#OUTPUT:
+#INPUT: A matrix of stock prices over time for multiple stocks
+#OUTPUT: A matrix of stock prices that has been "normalized" with respect to the opening price
+ of each of the stocks.
 def get_normed_vector(price_matrix):
 	normed_matrix = []
 	for index in range(len(price_matrix)):
@@ -102,8 +103,8 @@ def get_normed_vector(price_matrix):
 	print()
 	return np.array(normed_matrix)
 
-#INPUT:
-#OUTPUT:
+#INPUT: A list containing a series of portfolio values (over the course of time)
+#OUTPUT: Graphs out the portfolio valuation over time using matplotlib.pyplot
 def display_portfolio_value_over_time(portfolio_values):
 	portfolio_value_vector = convert_row_to_column(portfolio_values)
 	print(portfolio_value_vector)
@@ -121,24 +122,24 @@ def display_portfolio_value_over_time(portfolio_values):
 	portfolio_value_matrix['Price'].plot()
 	plt.show()
 
-#INPUT:
-#OUTPUT:
+#INPUT: A list that has a single row
+#OUTPUT: A list that has a single column
 def convert_row_to_column(row_list):
 	column_list = []
 	for row_element in row_list:
 		column_list.append([row_element])
 	return column_list
 
-#INPUT:
-#OUTPUT: 
+#INPUT: A String which is the name of a given stock.
+#OUTPUT: Returns the dates column of the stock with the specified name.
 def get_dates_column(name):
 	stock_data = pd.read_csv(name+csv_extension)
 	stock_date_data = stock_data['Date'].values
 	date_column = convert_row_to_column(stock_date_data)
 	return date_column
 
-#INPUT:
-#OUTPUT:
+#INPUT: A list of portfolio values over time.
+#OUTPUT: A list of daily returns (in terms of %) values over time.
 def get_daily_returns(portfolio_values):
 	daily_returns = []
 	for index in range(len(portfolio_values)-1):
@@ -146,21 +147,21 @@ def get_daily_returns(portfolio_values):
 		daily_returns.append(current_daily_return)
 	return daily_returns
 
-#INPUT:
-#OUTPUT:
+#INPUT: A list of portfolio values of a given portfolio over time.
+#OUTPUT: Cummulative return (that is the start-to-end return) for the given portfolio.
 def get_cumulative_return(portfolio_values):
 	return (portfolio_values[-1]/portfolio_values[0])-1
 
-#INPUT:
-#OUTPUT:
+#INPUT: A list containing the daily return values for a given portfolio.
+#OUTPUT: An average over the daily return values found within the inputted list.
 def get_average_daily_return(daily_returns):
 	average_return = 0
 	for daily_return in daily_returns:
 		average_return+=daily_return
 	return average_return/len(daily_returns)
 
-#INPUT:
-#OUTPUT:
+#INPUT: A list containing the daily return values for a given portfolio.
+#OUTPUT: The standard deviation for the given portfolio values.
 def get_standard_daily_return(daily_returns):
 	return statistics.stdev(daily_returns)
 
@@ -173,6 +174,9 @@ def get_sharpe_ratio(daily_returns):
 #OUTPUT: The annualized Sharpe ratio.
 def get_annualized_sharpe_ratio(number_samples, sharpe_ratio):
 	return math.sqrt(number_samples)*sharpe_ratio
+
+
+
 
 
 plot_price_data(portfolio_stock_names)
