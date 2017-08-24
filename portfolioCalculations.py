@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import statistics
 import math
+import scipy.optimize as spo
 
 
 initial_investment = 1000
@@ -92,7 +93,7 @@ def get_almost_equal_allocations(cash_amount, number_stocks, opening_day_costs):
 
 #INPUT: A matrix of stock prices over time for multiple stocks
 #OUTPUT: A matrix of stock prices that has been "normalized" with respect to the opening price
- of each of the stocks.
+#of each of the stocks.
 def get_normed_vector(price_matrix):
 	normed_matrix = []
 	for index in range(len(price_matrix)):
@@ -170,13 +171,61 @@ def get_standard_daily_return(daily_returns):
 def get_sharpe_ratio(daily_returns):
 	return (get_average_daily_return(daily_returns))/(get_standard_daily_return(daily_returns))\
 
-#INPUT: (1) Number of samples (252 for daily, 52 for weekly, 12 for monthly), (2) sharpe ratio
+#INPUT:  (1) Number of samples (252 for daily, 52 for weekly, 12 for monthly), (2) sharpe ratio
 #OUTPUT: The annualized Sharpe ratio.
 def get_annualized_sharpe_ratio(number_samples, sharpe_ratio):
 	return math.sqrt(number_samples)*sharpe_ratio
 
+#INPUT: Takes in an array of allocations for the stocks in the given portfolio.
+#OUTPUT: Returns the sharpe ratio of the portfolio in question.
+def negative_sharpe_ratio_from_allocations(allocations):
+	prices = get_price_data(portfolio_stock_names)
+	opening_day_prices = first_day_opening_prices(portfolio_stock_names)
+	normed_matrix = get_normed_vector(prices)
+	allocated_matrix = np.multiply(normed_matrix, allocations[0])
+	position_values = np.multiply(allocated_matrix, 1000)
+	portfolio_values = position_values.sum(axis=1)
 
+	daily_returns = get_daily_returns(portfolio_values)
+	cumulative_return = get_cumulative_return(portfolio_values)
+	average_daily_return = get_average_daily_return(daily_returns)
+	standard_daily_return = get_standard_daily_return(daily_returns)
+	sharpe_ratio = get_sharpe_ratio(daily_returns)
 
+	return -1*sharpe_ratio
+
+#INPUT: A list of the current allocations that have been settled on.
+#OUTPUT: Returns the constraint x[0]+x[1]+...x[n]-1=0
+def allocations_constraint(allocations):
+	total = 0;
+	for allocation in allocations:
+		total+=allocation
+	total-=1
+	return total
+
+#INPUT: 
+#OUTPUT: 
+def optimize_allocations(opening_day_prices):
+	allocations_guess = get_almost_equal_allocations(initial_investment, len(portfolio_stock_names), opening_day_prices)[0]
+	allocations_guess = np.asarray(allocations_guess)
+	allocation_bounds = ((0,1), (0,1), (0,1), (0,1))
+	allocation_constraint = [{'type':'eq', 'fun': allocations_constraint}]
+	optimal_sharpe_ratio_allocations = spo.minimize(negative_sharpe_ratio_from_allocations, allocations_guess, method='Nelder-Mead', bounds=allocation_bounds, constraints=allocations_constraint ,options={'disp': True})
+	#print("Optimal Allocations for maximizing the sharpe ratio: " + str(optimal_sharpe_ratio_allocations.x))
+	return optimal_sharpe_ratio_allocations.x
+
+#INPUT:
+#OUTPUT:
+def display_optimized_portfolio_values():
+	prices = get_price_data(portfolio_stock_names)
+	opening_day_prices = first_day_opening_prices(portfolio_stock_names)
+	normed_matrix = get_normed_vector(prices)
+	optimized_allocations = optimize_allocations(opening_day_prices)
+	allocated_matrix = np.multiply(normed_matrix, optimized_allocations)
+	position_values = np.multiply(allocated_matrix, 1000)
+	portfolio_values = position_values.sum(axis=1)
+	plt.title("Optimized Portfolio Values Over Time")
+	display_portfolio_value_over_time(portfolio_values)
 
 
 plot_price_data(portfolio_stock_names)
@@ -184,11 +233,12 @@ print()
 prices = get_price_data(portfolio_stock_names)
 print("Total Stock Price Data: " + str(prices))
 print()
+
 opening_day_prices = first_day_opening_prices(portfolio_stock_names)
 allocations = get_almost_equal_allocations(initial_investment, len(portfolio_stock_names), opening_day_prices)
 normed_matrix = get_normed_vector(prices)
 allocated_matrix = np.multiply(normed_matrix, allocations[0])
-position_values = np.multiply(allocated_matrix, allocations[1])
+position_values = np.multiply(allocated_matrix, 1000)
 portfolio_values = position_values.sum(axis=1)
 
 daily_returns = get_daily_returns(portfolio_values)
@@ -198,25 +248,30 @@ standard_daily_return = get_standard_daily_return(daily_returns)
 sharpe_ratio = get_sharpe_ratio(daily_returns)
 annualized_sharpe_ratio = get_annualized_sharpe_ratio(252, sharpe_ratio)
 
-print("Normed Matrix: " + str(normed_matrix))
+print("Normed Matrix: " + str(get_normed_vector(prices)))
 print()
-print("Allocated Matrix: " + str(allocated_matrix))
+print("Allocated Matrix: " + str(np.multiply(normed_matrix, allocations[0])))
 print()
-print("Position Values Matrix: " + str(position_values))
+print("Position Values Matrix: " + str(np.multiply(allocated_matrix, 1000)))
 print()
-print("Portfolio Values Matrix: " + str(portfolio_values))
+print("Portfolio Values Matrix: " + str(position_values.sum(axis=1)))
 print()
-print("Daily Returns: " + str(daily_returns))
+print("Daily Returns: " + str(get_daily_returns(portfolio_values)))
 print()
-print("Cumulative Return: " + str(cumulative_return))
+print("Cumulative Return: " + str(get_cumulative_return(portfolio_values)))
 print()
-print("Average Daily Return: " + str(average_daily_return))
+print("Average Daily Return: " + str(get_average_daily_return(daily_returns)))
 print()
-print("Standard Daily Return: " + str(standard_daily_return))
+print("Standard Daily Return: " + str(get_standard_daily_return(daily_returns)))
 print()
-print("Sharpe Ratio: " + str(sharpe_ratio))
+print("Sharpe Ratio: " + str(get_sharpe_ratio(daily_returns)))
 print()
-print("Annualized Sharpe Ratio: " + str(annualized_sharpe_ratio))
+print("Annualized Sharpe Ratio: " + str(get_annualized_sharpe_ratio(252, sharpe_ratio)))
 print()
 
 display_portfolio_value_over_time(portfolio_values)
+optimize_allocations(first_day_opening_prices(portfolio_stock_names))
+
+display_optimized_portfolio_values()
+
+
